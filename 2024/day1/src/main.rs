@@ -3,7 +3,7 @@ use std::io::{self, BufRead};
 use std::collections::HashMap;
 
 fn main() -> std::io::Result<()> {
-    let file = File::open("../input.txt")?;
+    let file = File::open("./input.txt")?;
     let reader = io::BufReader::new(file);
 
     let mut vec1: Vec<i32> = Vec::new();
