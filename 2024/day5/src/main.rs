@@ -86,17 +86,13 @@ fn main() -> std::io::Result<()> {
 
 fn sort(update: &Vec<i32>, rules: &Vec<(i32, i32)>) -> Vec<i32> {
     let mut new_update = Vec::new();
-    for num in update {
-        if new_update.len() == 0 {
-            new_update.push(*num); 
-        } else {
-            for i in 0..=new_update.len() {
-                if new_update.split_at(i).1.iter().all(|val| {
-                    rules.iter().find(|&&(n, v)| n == *num && v == *val).is_some()
-                }) {
-                    new_update.insert(i, *num);
-                    break;
-                }
+    for &num in update {
+        for i in 0..=new_update.len() {
+            if new_update[i..].iter().all(|val| {
+                rules.iter().any(|&(n, v)| n == num && v == *val)
+            }) {
+                new_update.insert(i, num);
+                break;
             }
         }
     }
