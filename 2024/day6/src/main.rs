@@ -10,6 +10,81 @@ pub enum Direction {
     Left,
 }
 
+impl Direction {
+    fn turn_right(self) -> Direction {
+        match self {
+            Direction::Up => Direction::Right,
+            Direction::Right => Direction::Down,
+            Direction::Down => Direction::Left,
+            Direction::Left => Direction::Up,
+        }
+    }
+
+    fn move_guard(&self, x: &mut usize, y: &mut usize) {
+        match self {
+            Direction::Up => *x -= 1,
+            Direction::Right => *y += 1,
+            Direction::Down => *x += 1,
+            Direction::Left => *y -= 1,
+        }
+    }
+}
+
+#[derive(Eq, Hash, PartialEq, Clone, Debug, Copy)]
+pub struct Guard {
+    x: usize,
+    y: usize,
+    dir: Direction,
+}
+
+#[derive(Clone)]
+struct GuardPath {
+    grid: Vec<Vec<char>>,
+    guard: Guard,
+    visited: HashSet<Guard>,
+}
+
+impl GuardPath {
+    fn new(grid: Vec<Vec<char>>, guard: Guard) -> Self {
+        GuardPath {
+            grid,
+            guard,
+            visited: HashSet::new(),
+        }
+    }
+
+    fn exits(&mut self) -> bool {
+        loop {
+            if !self.visited.insert(self.guard) {
+                return false;
+            }
+            match self.scout() {
+                Some('#') => {
+                    self.guard.dir = self.guard.dir.turn_right();
+                }
+                None => break,
+                _ => {
+                    self.guard.dir.move_guard(&mut self.guard.x, &mut self.guard.y);
+                }
+            }
+        }
+        true
+    }
+    
+    fn scout(&self) -> Option<char> {
+        if
+            self.guard.x == 0 || self.guard.x == self.grid.len() - 1 ||
+            self.guard.y == 0 || self.guard.y == self.grid.get(self.guard.x).expect("Real").len() - 1
+        {
+            return None;
+        }
+        let mut new_coords = (self.guard.x, self.guard.y);
+        self.guard.dir.move_guard(&mut new_coords.0, &mut new_coords.1);
+        Some(*self.grid.get(new_coords.0).expect("Real").get(new_coords.1).expect("Real"))
+    }
+
+}
+
 fn main() -> std::io::Result<()> {
     let file = File::open("./input.txt")?;
     let reader = io::BufReader::new(file);
@@ -31,6 +106,7 @@ fn main() -> std::io::Result<()> {
         .iter().position(|v| v == &'^').expect("Real");
     let start_coords = (start_x, start_y);
     let start_dir: Direction = Direction::Up;
+
     // Part 1
     let finished_grid = move_all(&grid, &start_dir, &start_coords).expect("Part one");
 
@@ -45,10 +121,17 @@ fn main() -> std::io::Result<()> {
     for (i, row) in grid.iter().enumerate() {
         for (j, _) in row.iter().enumerate() {
             if *grid.get(i).expect("Real").get(j).expect("Real") == '.' {
-                println!("{} {}", i, j);
                 let mut try_grid = grid.clone();
                 *try_grid.get_mut(i).expect("Real").get_mut(j).expect("Real") = '#';
-                if move_all(&try_grid, &start_dir, &start_coords).is_none() {
+
+                let mut path = GuardPath::new
+                    (try_grid, Guard { 
+                        x: start_x,
+                        y: start_y,
+                        dir: start_dir
+                     });
+
+                if !path.exits() {
                     valid_count += 1;
                 }
             }
@@ -65,12 +148,8 @@ fn move_all(
     let mut new_grid = grid.to_owned();
     let mut dir = *start_dir;
     let mut coords = *start_coords;
-    let mut visited: HashSet<((usize, usize), Direction)> = HashSet::new();
     loop {
         *new_grid.get_mut(coords.0).expect("Real").get_mut(coords.1).expect("Real") = 'X';
-        if !visited.insert((coords, dir)) {
-            return None;
-        }
         match scout(grid, &coords, &dir) {
             Some('#') => {
                 dir = dir.turn_right();
@@ -106,16 +185,6 @@ fn move_guard(coords: &mut (usize, usize), dir: &Direction) {
     }
 }
 
-impl Direction {
-    fn turn_right(self) -> Direction {
-        match self {
-            Direction::Up => Direction::Right,
-            Direction::Right => Direction::Down,
-            Direction::Down => Direction::Left,
-            Direction::Left => Direction::Up,
-        }
-    }
-}
 
 /*
 use std::io::{self, BufRead};
