@@ -1,5 +1,6 @@
 use std::fs::File;
 use std::io::{self, BufRead};
+use std::collections::VecDeque;
 
 fn main() -> std::io::Result<()> {
     let file = File::open("./input.txt")?;
@@ -48,33 +49,20 @@ fn main() -> std::io::Result<()> {
     // Part 2
     let mut tot_cal_2 = 0;
     for equation in &equations {
+        println!("{:?}", equation);
         let num_operators = equation.1.len() - 1;
         if num_operators < 1 {
             break;
         }
 
-        let all_combs: i64 = 1 << (num_operators * 2);
-        if (0..all_combs).any(|comb| {
-            let result = equation.1.iter().enumerate().fold(
-                Some(0i64), |acc, (i, &num)| {
-                    if acc.is_none() {
-                        return None;
-                    }
-                    if i == 0 {
-                        return acc.expect("Is ok").checked_add(num);
-                    }
-                    match (comb >> (i - 1) * 2) & 3 {
-                        0 => acc.expect("Is ok").checked_add(num),
-                        1 => acc.expect("Is ok").checked_mul(num),
-                        2 => {
-                            let concat = acc?.to_string() + &num.to_string();
-                            Some(concat.parse::<i64>().expect("Should be fine?"))
-                        }
-                        3 => None,
-                        _ => panic!("How did this happen?"),
-                    }
-                });
-            result == Some(equation.0)
+        let all_combs: i64 = 3_i64.pow(num_operators as u32);
+        if (0..all_combs).any(|mut comb| {
+            equals_result(
+                equation.0,
+                0,
+                &mut VecDeque::from(equation.1.clone()),
+                &mut comb
+            )
         }) {
             tot_cal_2 += equation.0;
         }
@@ -83,4 +71,32 @@ fn main() -> std::io::Result<()> {
     println!("{}",  tot_cal_2);
 
     Ok(())
+}
+
+fn equals_result(result: i64, curr: i64, parts: &mut VecDeque<i64>, comb: &mut i64) -> bool {
+    if curr > result {
+        return false;
+    }
+    match parts.pop_front() {
+        Some(num) => {
+            let new_curr;
+            if curr == 0 {
+                new_curr = num;
+            } else {
+                match *(comb) % 3 {
+                    0 => new_curr = curr.checked_add(num).unwrap_or(i64::MAX),
+                    1 => new_curr = curr.checked_mul(num).unwrap_or(i64::MAX),
+                    2 => {
+                        let concat = curr.to_string() + &num.to_string();
+                        new_curr = concat.parse::<i64>().expect("Should be fine?");
+                    }
+                    _ => panic!("How did this happen?"),
+                }
+                *comb /= 3;
+            }
+
+            equals_result(result, new_curr, parts, comb)
+        }
+        None => result == curr,
+    }
 }
