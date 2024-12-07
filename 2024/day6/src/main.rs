@@ -45,9 +45,9 @@ fn main() -> std::io::Result<()> {
     for (i, row) in grid.iter().enumerate() {
         for (j, _) in row.iter().enumerate() {
             if *grid.get(i).expect("Real").get(j).expect("Real") == '.' {
-                println!("{}, {}", i, j);
+                println!("{} {}", i, j);
                 let mut try_grid = grid.clone();
-                *try_grid.get_mut(i).expect("Real").get_mut(j).expect("Real") = 'X';
+                *try_grid.get_mut(i).expect("Real").get_mut(j).expect("Real") = '#';
                 if move_all(&try_grid, &start_dir, &start_coords).is_none() {
                     valid_count += 1;
                 }
@@ -69,7 +69,6 @@ fn move_all(
     loop {
         *new_grid.get_mut(coords.0).expect("Real").get_mut(coords.1).expect("Real") = 'X';
         if !visited.insert((coords, dir)) {
-            println!("{:?}", visited);
             return None;
         }
         match scout(grid, &coords, &dir) {
