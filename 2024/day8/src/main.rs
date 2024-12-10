@@ -34,6 +34,7 @@ fn main() -> std::io::Result<()> {
         }
     }
 
+    // Part 1
     for (_, locs) in &antenna_locs {
         for a1 in 0..locs.len() {
             for a2 in (a1 + 1)..locs.len() {
@@ -52,6 +53,20 @@ fn main() -> std::io::Result<()> {
 
     let antinode_count = antinodes.iter().count();
     println!("{}", antinode_count);
+
+    // Part 2
+    for (_, locs) in &antenna_locs {
+        for a1 in 0..locs.len() {
+            for a2 in (a1 + 1)..locs.len() {
+                for coord in get_antinodes(locs[a1], locs[a2], rowsize, colsize) {
+                    antinodes.insert(coord);
+                }
+            }
+        }
+    }
+
+    let new_antinode_count = antinodes.iter().count();
+    println!("{}", new_antinode_count);
 
     Ok(())
 }
@@ -77,4 +92,63 @@ fn find_antinode(
         }
         None => None,
     }
+}
+
+fn get_antinodes(
+    a1: (usize, usize), a2: (usize, usize), rows: usize, cols: usize
+) -> Vec<(usize, usize)> {
+    let mut antinodes = Vec::new();
+    let mut curr_i = a1.0;
+    let mut curr_j = a1.1;
+    loop {
+        antinodes.push((curr_i, curr_j));
+        match (curr_i + a1.0).checked_sub(a2.0) {
+            Some(r) => {
+                if r >= rows {
+                    break;
+                }
+                match (curr_j + a1.1).checked_sub(a2.1) {
+                    Some(c) => {
+                        if c >= cols {
+                            break;
+                        } else {
+                            curr_i = r;
+                            curr_j = c;
+                            antinodes.push((r, c));
+                        }
+                    }
+                    None => break,
+                }
+            }
+            None => break,
+        }
+    }
+
+    curr_i = a2.0;
+    curr_j = a2.1;
+    loop {
+        antinodes.push((curr_i, curr_j));
+        match (curr_i + a2.0).checked_sub(a1.0) {
+            Some(r) => {
+                if r >= rows {
+                    break;
+                }
+                match (curr_j + a2.1).checked_sub(a1.1) {
+                    Some(c) => {
+                        if c >= cols {
+                            break;
+                        } else {
+                            curr_i = r;
+                            curr_j = c;
+                            antinodes.push((r, c));
+                        }
+                    }
+                    None => break,
+                }
+            }
+            None => break,
+        }
+    }
+    
+    antinodes
 }
