@@ -62,13 +62,12 @@ impl GuardPath {
                 Some('#') => {
                     self.guard.dir = self.guard.dir.turn_right();
                 }
-                None => break,
+                None => return true,
                 _ => {
                     self.guard.dir.move_guard(&mut self.guard.x, &mut self.guard.y);
                 }
             }
         }
-        true
     }
     
     fn scout(&self) -> Option<char> {
