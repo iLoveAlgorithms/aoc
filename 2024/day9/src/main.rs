@@ -79,63 +79,45 @@ fn main() -> std::io::Result<()> {
         .flat_map(|line_vals| line_vals.into_iter())
         .collect();
 
-    println!("{:?}", fs_vals);
-
     let mut i = fs_vals.len() - 1;
-    while j > 0 {
-        match fs_vals.get(j) {
-            Some(block) => {
-                let mut i = 0;
+    while i > 0 {
+        if let Some(file) = fs_vals.get(i) {
+            if let Some(_id) = file.1 {
+                let mut j = 0;
+                while j < i {
+                    if let Some(empty) = fs_vals.get(j) {
+                        if empty.1.is_none() && empty.0 >= file.0 {
+                            let spsize = empty.0;
+                            let rmsize = file.0;
+                            let remove_block = fs_vals.remove(i);
+                            fs_vals.splice(j..=j, vec![remove_block, (spsize - rmsize, None)]);
+                            fs_vals.insert(i, (rmsize, None));
+                            break;
+                        }
+                    }
+                    j += 1;
+                }
             }
-            
-        }
-        j -= 1;
-    }
 
-    // while i < fs_vals.len() {
-    //     match fs_vals.get(i) {
-    //         Some(block) => {
-    //             match block.1 {
-    //                 None => {
-    //                     if block.0 == 0 {
-    //                         i += 1;
-    //                         continue;
-    //                     }
-    //                     let numblocks = block.0;
-    //                     while let Some(fill) = fs_vals.get(j) {
-    //                         if j <= i { break; }
-    //                         println!("{:?} {} {}", fs_vals, i, j);
-    //                         match fill.1 {
-    //                             Some(_) => {
-    //                                 let nummoving = fill.0;
-    //                                 // Make it so that splices takes into account the None ahead
-    //                                 if nummoving <= numblocks {
-    //                                     let remove_block = fs_vals.remove(j);
-    //                                     fs_vals.splice(i..=i, vec![remove_block, (numblocks - nummoving, None)]);
-    //                                     break;
-    //                                 }
-    //                             }
-    //                             None => (),
-    //                         }
-    //                         j -= 1;
-    //                     }
-    //                 }
-    //                 Some(_) => ()
-    //             }
-    //         }
-    //         None => (),
-    //     }
-    //     i += 1;
-    // }
+        }
+        i -= 1;
+    }
 
     let mut checksum2: i64 = 0;
     let mut c: i64 = 0;
-    fs_vals.iter().for_each(|(blocks, val)| {
-        if let Some(id) = val {
-            checksum2 += (c..c + *blocks as i64).map(|x| x * *id as i64).sum::<i64>();
-            c += *blocks as i64;
+
+    for (blocks, val) in fs_vals {
+        let blocks_i64 = blocks as i64;
+        match val {
+            Some(id) => {
+                let sum: i64 = (c..c + blocks_i64).map(|x| x * id as i64).sum();
+                checksum2 += sum;
+            }
+            None => (),
         }
-    });
+        c += blocks_i64;
+    }
+
     println!("{}", checksum2);
 
     Ok(())
