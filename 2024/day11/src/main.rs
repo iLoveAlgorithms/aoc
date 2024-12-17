@@ -24,6 +24,7 @@ fn main() -> std::io::Result<()> {
     println!("{}", stone_count_2);
 
     // Part 2
+    let mut cache: HashMap<(i64, u32), i64> = HashMap::new();
     let stone_count_2: i64 = starting_arr.iter().map(|stone|
         do_blinks(&mut cache, *stone, 75))
         .sum();
