@@ -45,19 +45,18 @@ fn do_blinks(
         return *found;
     }
 
-    let result = 
-        if stone_val == 0 {
-            do_blinks(cache, 1, blinks_left - 1)
-        } else if stone_val.to_string().len() % 2 == 0 {
-            let removed_stone = stone_val.to_string();
-            let mid = removed_stone.len() / 2;
-            let first_half = removed_stone[0..mid].parse::<i64>().expect("nw");
-            let second_half = removed_stone[mid..].parse::<i64>().expect("nw");
-                do_blinks(cache, first_half, blinks_left - 1) +
-                do_blinks(cache, second_half, blinks_left - 1)
-        } else {
-            do_blinks(cache, stone_val * 2024, blinks_left - 1)
-        };
+    let result = if stone_val == 0 {
+        do_blinks(cache, 1, blinks_left - 1)
+    } else if stone_val.to_string().len() % 2 == 0 {
+        let removed_stone = stone_val.to_string();
+        let mid = removed_stone.len() / 2;
+        let first_half = removed_stone[0..mid].parse::<i64>().expect("nw");
+        let second_half = removed_stone[mid..].parse::<i64>().expect("nw");
+            do_blinks(cache, first_half, blinks_left - 1) +
+            do_blinks(cache, second_half, blinks_left - 1)
+    } else {
+        do_blinks(cache, stone_val * 2024, blinks_left - 1)
+    };
 
     cache.insert((stone_val, blinks_left), result);
     result
