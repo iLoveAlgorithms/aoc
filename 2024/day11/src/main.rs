@@ -24,7 +24,6 @@ fn main() -> std::io::Result<()> {
     println!("{}", stone_count_2);
 
     // Part 2
-    let mut cache: HashMap<(i64, u32), i64> = HashMap::new();
     let stone_count_2: i64 = starting_arr.iter().map(|stone|
         do_blinks(&mut cache, *stone, 75))
         .sum();
@@ -45,20 +44,19 @@ fn do_blinks(
         return *found;
     }
 
-    let mut result = 0;
-    if stone_val == 0 {
-        result = do_blinks(cache, 1, blinks_left - 1);
-    } else if stone_val.to_string().len() % 2 == 0 {
-        let removed_stone = stone_val.to_string();
-        let mid = removed_stone.len() / 2;
-        let first_half = removed_stone[0..mid].parse::<i64>().expect("nw");
-        let second_half = removed_stone[mid..].parse::<i64>().expect("nw");
-        result =
-            do_blinks(cache, first_half, blinks_left - 1) +
-            do_blinks(cache, second_half, blinks_left - 1);
-    } else {
-        result = do_blinks(cache, stone_val * 2024, blinks_left - 1);
-    }
+    let result = 
+        if stone_val == 0 {
+            do_blinks(cache, 1, blinks_left - 1)
+        } else if stone_val.to_string().len() % 2 == 0 {
+            let removed_stone = stone_val.to_string();
+            let mid = removed_stone.len() / 2;
+            let first_half = removed_stone[0..mid].parse::<i64>().expect("nw");
+            let second_half = removed_stone[mid..].parse::<i64>().expect("nw");
+                do_blinks(cache, first_half, blinks_left - 1) +
+                do_blinks(cache, second_half, blinks_left - 1)
+        } else {
+            do_blinks(cache, stone_val * 2024, blinks_left - 1)
+        };
 
     cache.insert((stone_val, blinks_left), result);
     result
